@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 
 export function HomeContent() {
@@ -14,9 +15,10 @@ export function HomeContent() {
           تسجيل الخروج
         </button>
       </div>
-      <p className="mt-4 text-gray-500">
-        هنا هنبني صفحات المنتجات والسلة والطلبات في الخطوات الجاية.
-      </p>
+      <Link href="/products" className="mt-4 inline-block underline">
+        عرض المنتجات
+      </Link>
+      <p className="mt-4 text-gray-500">هنا هنبني السلة والطلبات في الخطوات الجاية.</p>
     </div>
   );
 }
