@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -16,9 +17,18 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/errors";
 import { productsClientApi } from "@/lib/products-client-api";
+import { categoriesApi } from "@/lib/shop-client-api";
+import type { Category } from "@/types/shop";
 
 const schema = z.object({
   name: z.string().min(2, "اسم المنتج قصير جداً"),
@@ -31,6 +41,7 @@ const schema = z.object({
     .int("الكمية يجب أن تكون رقماً صحيحاً")
     .min(0, "الكمية لا يمكن أن تكون سالبة"),
   imageUrl: z.union([z.literal(""), z.string().url("رابط غير صالح")]),
+  categoryId: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -38,14 +49,24 @@ type FormValues = z.infer<typeof schema>;
 export function NewProductForm() {
   const router = useRouter();
 
+  const [categories, setCategories] = useState<Category[]>([]);
+
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", description: "", stock: 0, imageUrl: "" },
+    defaultValues: { name: "", description: "", stock: 0, imageUrl: "", categoryId: "" },
   });
+
+  useEffect(() => {
+    categoriesApi
+      .list()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -55,6 +76,7 @@ export function NewProductForm() {
         priceCents: Math.round(values.price * 100),
         stock: values.stock,
         imageUrl: values.imageUrl || undefined,
+        categoryId: values.categoryId || undefined,
       });
       toast.success("تمت إضافة المنتج");
       router.push("/products");
@@ -84,6 +106,30 @@ export function NewProductForm() {
                 <FieldLabel htmlFor="description">الوصف</FieldLabel>
                 <Textarea id="description" rows={4} {...register("description")} />
               </Field>
+
+              {categories.length > 0 && (
+                <Field>
+                  <FieldLabel htmlFor="categoryId">الفئة</FieldLabel>
+                  <Controller
+                    control={control}
+                    name="categoryId"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="categoryId" className="w-full">
+                          <SelectValue placeholder="اختر فئة (اختياري)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </Field>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <Field data-invalid={!!errors.price}>

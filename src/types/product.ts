@@ -1,5 +1,6 @@
 export interface Product {
   id: string;
+  categoryId: string | null;
   name: string;
   description: string;
   priceCents: number;
@@ -11,6 +12,7 @@ export interface Product {
 
 export interface CreateProductPayload {
   name: string;
+  categoryId?: string;
   description?: string;
   priceCents: number;
   stock?: number;
