@@ -1,19 +1,24 @@
-'use client';
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useState } from 'react';
-import axios from 'axios';
-import { authApi } from '@/lib/auth-api';
-import { useAuthStore } from '@/store/auth-store';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { authApi } from "@/lib/auth-api";
+import { getErrorMessage } from "@/lib/errors";
+import { useAuthStore } from "@/store/auth-store";
 
 const schema = z.object({
-  name: z.string().min(2, 'الاسم قصير جداً'),
-  email: z.string().email('بريد إلكتروني غير صالح'),
-  password: z.string().min(6, 'كلمة السر لازم تكون 6 أحرف على الأقل'),
+  name: z.string().min(2, "الاسم قصير جداً"),
+  email: z.string().email("بريد إلكتروني غير صالح"),
+  password: z.string().min(6, "كلمة السر يجب ألا تقل عن 6 أحرف"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -21,7 +26,6 @@ type FormValues = z.infer<typeof schema>;
 export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
@@ -30,65 +34,72 @@ export default function RegisterPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (values: FormValues) => {
-    setServerError(null);
     try {
       const res = await authApi.register(values);
       setAuth(res.accessToken, res.user);
-      router.replace('/');
+      toast.success("تم إنشاء حسابك بنجاح");
+      router.replace("/");
     } catch (err) {
-      const message = axios.isAxiosError(err)
-        ? (err.response?.data?.message ?? 'حدث خطأ، حاول مرة أخرى')
-        : 'حدث خطأ، حاول مرة أخرى';
-      setServerError(Array.isArray(message) ? message.join(', ') : message);
+      toast.error(getErrorMessage(err, "حدث خطأ، حاول مرة أخرى"));
     }
   };
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-4 p-6">
-      <h1 className="text-2xl font-semibold">إنشاء حساب</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-        <div>
-          <input
-            {...register('name')}
-            placeholder="الاسم"
-            className="w-full rounded border border-gray-300 p-2"
-          />
-          {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
-        </div>
-        <div>
-          <input
-            {...register('email')}
-            placeholder="البريد الإلكتروني"
-            className="w-full rounded border border-gray-300 p-2"
-          />
-          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
-        </div>
-        <div>
-          <input
-            {...register('password')}
-            type="password"
-            placeholder="كلمة السر"
-            className="w-full rounded border border-gray-300 p-2"
-          />
-          {errors.password && (
-            <p className="text-sm text-red-500">{errors.password.message}</p>
-          )}
-        </div>
-        {serverError && <p className="text-sm text-red-500">{serverError}</p>}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded bg-black p-2 text-white disabled:opacity-50"
-        >
-          {isSubmitting ? 'جاري الإنشاء...' : 'إنشاء حساب'}
-        </button>
-      </form>
-      <p className="text-sm">
-        عندك حساب بالفعل؟{' '}
-        <Link href="/login" className="underline">
-          تسجيل الدخول
-        </Link>
-      </p>
+    <div className="mx-auto flex w-full max-w-md px-4 py-16">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-xl">إنشاء حساب</CardTitle>
+          <CardDescription>سجّل بياناتك للبدء</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <FieldGroup>
+              <Field data-invalid={!!errors.name}>
+                <FieldLabel htmlFor="name">الاسم</FieldLabel>
+                <Input id="name" aria-invalid={!!errors.name} {...register("name")} />
+                <FieldError errors={[errors.name]} />
+              </Field>
+
+              <Field data-invalid={!!errors.email}>
+                <FieldLabel htmlFor="email">البريد الإلكتروني</FieldLabel>
+                <Input
+                  id="email"
+                  type="email"
+                  dir="ltr"
+                  placeholder="name@example.com"
+                  aria-invalid={!!errors.email}
+                  {...register("email")}
+                />
+                <FieldError errors={[errors.email]} />
+              </Field>
+
+              <Field data-invalid={!!errors.password}>
+                <FieldLabel htmlFor="password">كلمة السر</FieldLabel>
+                <Input
+                  id="password"
+                  type="password"
+                  dir="ltr"
+                  aria-invalid={!!errors.password}
+                  {...register("password")}
+                />
+                <FieldError errors={[errors.password]} />
+              </Field>
+
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="animate-spin" />}
+                إنشاء حساب
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                لديك حساب؟{" "}
+                <Link href="/login" className="font-medium text-foreground underline">
+                  تسجيل الدخول
+                </Link>
+              </p>
+            </FieldGroup>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

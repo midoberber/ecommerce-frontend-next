@@ -1,36 +1,43 @@
-import Link from 'next/link';
-import { getProducts } from '@/lib/products-api';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { PackageOpen, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ProductCard } from "@/components/product-card";
+import { getProducts } from "@/lib/products-api";
 
-function formatPrice(cents: number) {
-  return (cents / 100).toLocaleString('ar-EG', { style: 'currency', currency: 'SAR' });
-}
+export const metadata: Metadata = { title: "المنتجات" };
 
 export default async function ProductsPage() {
   const products = await getProducts();
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">المنتجات</h1>
-        <Link href="/products/new" className="rounded bg-black px-4 py-2 text-white">
-          + منتج جديد
-        </Link>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8">
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">المنتجات</h1>
+          <p className="text-sm text-muted-foreground">{products.length} منتج</p>
+        </div>
+        <Button asChild>
+          <Link href="/products/new">
+            <Plus data-icon="inline-start" />
+            منتج جديد
+          </Link>
+        </Button>
       </div>
 
       {products.length === 0 ? (
-        <p className="mt-6 text-gray-500">مفيش منتجات لسه.</p>
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-20 text-center">
+          <PackageOpen className="size-10 text-muted-foreground" />
+          <p className="font-medium">لا توجد منتجات بعد</p>
+          <p className="text-sm text-muted-foreground">ابدأ بإضافة أول منتج للمتجر.</p>
+          <Button asChild className="mt-2">
+            <Link href="/products/new">إضافة منتج</Link>
+          </Button>
+        </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
-            <Link
-              key={product.id}
-              href={`/products/${product.id}`}
-              className="rounded border border-gray-200 p-4 hover:border-gray-400"
-            >
-              <h2 className="font-medium">{product.name}</h2>
-              <p className="mt-1 line-clamp-2 text-sm text-gray-500">{product.description}</p>
-              <p className="mt-2 font-semibold">{formatPrice(product.priceCents)}</p>
-            </Link>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       )}

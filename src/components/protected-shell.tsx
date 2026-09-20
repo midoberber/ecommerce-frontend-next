@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/auth-store';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { useAuthStore } from "@/store/auth-store";
 
 export function ProtectedShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -11,14 +12,14 @@ export function ProtectedShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (hasHydrated && !accessToken) {
-      router.replace('/login');
+      router.replace("/login");
     }
   }, [hasHydrated, accessToken, router]);
 
   if (!hasHydrated || !accessToken) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">جاري التحميل...</p>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

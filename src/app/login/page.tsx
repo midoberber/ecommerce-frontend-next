@@ -1,18 +1,23 @@
-'use client';
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useState } from 'react';
-import axios from 'axios';
-import { authApi } from '@/lib/auth-api';
-import { useAuthStore } from '@/store/auth-store';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { authApi } from "@/lib/auth-api";
+import { getErrorMessage } from "@/lib/errors";
+import { useAuthStore } from "@/store/auth-store";
 
 const schema = z.object({
-  email: z.string().email('بريد إلكتروني غير صالح'),
-  password: z.string().min(1, 'أدخل كلمة السر'),
+  email: z.string().email("بريد إلكتروني غير صالح"),
+  password: z.string().min(1, "أدخل كلمة السر"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -20,7 +25,6 @@ type FormValues = z.infer<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
@@ -29,57 +33,66 @@ export default function LoginPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (values: FormValues) => {
-    setServerError(null);
     try {
       const res = await authApi.login(values);
       setAuth(res.accessToken, res.user);
-      router.replace('/');
+      toast.success(`أهلاً ${res.user.name}`);
+      router.replace("/");
     } catch (err) {
-      const message = axios.isAxiosError(err)
-        ? (err.response?.data?.message ?? 'بيانات الدخول غير صحيحة')
-        : 'بيانات الدخول غير صحيحة';
-      setServerError(Array.isArray(message) ? message.join(', ') : message);
+      toast.error(getErrorMessage(err, "بيانات الدخول غير صحيحة"));
     }
   };
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-4 p-6">
-      <h1 className="text-2xl font-semibold">تسجيل الدخول</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-        <div>
-          <input
-            {...register('email')}
-            placeholder="البريد الإلكتروني"
-            className="w-full rounded border border-gray-300 p-2"
-          />
-          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
-        </div>
-        <div>
-          <input
-            {...register('password')}
-            type="password"
-            placeholder="كلمة السر"
-            className="w-full rounded border border-gray-300 p-2"
-          />
-          {errors.password && (
-            <p className="text-sm text-red-500">{errors.password.message}</p>
-          )}
-        </div>
-        {serverError && <p className="text-sm text-red-500">{serverError}</p>}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded bg-black p-2 text-white disabled:opacity-50"
-        >
-          {isSubmitting ? 'جاري الدخول...' : 'دخول'}
-        </button>
-      </form>
-      <p className="text-sm">
-        مفيش حساب؟{' '}
-        <Link href="/register" className="underline">
-          إنشاء حساب جديد
-        </Link>
-      </p>
+    <div className="mx-auto flex w-full max-w-md px-4 py-16">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-xl">تسجيل الدخول</CardTitle>
+          <CardDescription>أدخل بريدك وكلمة السر للمتابعة</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <FieldGroup>
+              <Field data-invalid={!!errors.email}>
+                <FieldLabel htmlFor="email">البريد الإلكتروني</FieldLabel>
+                <Input
+                  id="email"
+                  type="email"
+                  dir="ltr"
+                  placeholder="name@example.com"
+                  aria-invalid={!!errors.email}
+                  {...register("email")}
+                />
+                <FieldError errors={[errors.email]} />
+              </Field>
+
+              <Field data-invalid={!!errors.password}>
+                <FieldLabel htmlFor="password">كلمة السر</FieldLabel>
+                <Input
+                  id="password"
+                  type="password"
+                  dir="ltr"
+                  aria-invalid={!!errors.password}
+                  {...register("password")}
+                />
+                <FieldError errors={[errors.password]} />
+              </Field>
+
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="animate-spin" />}
+                دخول
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                ليس لديك حساب؟{" "}
+                <Link href="/register" className="font-medium text-foreground underline">
+                  إنشاء حساب جديد
+                </Link>
+              </p>
+            </FieldGroup>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
