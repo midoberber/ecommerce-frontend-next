@@ -1,6 +1,11 @@
 import { apiClient } from "./api-client";
-import type { Category } from "@/types/shop";
-import type { Cart, Order, OrderDetail } from "@/types/shop";
+import type { Cart, Category, Order, OrderDetail } from "@/types/shop";
+import type { CreateProductPayload, Product } from "@/types/product";
+
+export const productsApi = {
+  create: (payload: CreateProductPayload) =>
+    apiClient.post<Product>("/products", payload).then((res) => res.data),
+};
 
 export const cartApi = {
   get: () => apiClient.get<Cart>("/cart").then((res) => res.data),

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -13,7 +13,6 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { authApi } from "@/lib/auth-api";
 import { getErrorMessage } from "@/lib/errors";
-import { useAuthStore } from "@/store/auth-store";
 
 const schema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
@@ -24,7 +23,8 @@ type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") ?? "/";
 
   const {
     register,
@@ -34,10 +34,10 @@ export default function LoginPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const res = await authApi.login(values);
-      setAuth(res.accessToken, res.user);
-      toast.success(`أهلاً ${res.user.name}`);
-      router.replace("/");
+      const { user } = await authApi.login(values);
+      toast.success(`أهلاً ${user.name}`);
+      router.replace(nextPath);
+      router.refresh();
     } catch (err) {
       toast.error(getErrorMessage(err, "بيانات الدخول غير صحيحة"));
     }

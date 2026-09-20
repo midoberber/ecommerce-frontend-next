@@ -13,7 +13,6 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { authApi } from "@/lib/auth-api";
 import { getErrorMessage } from "@/lib/errors";
-import { useAuthStore } from "@/store/auth-store";
 
 const schema = z.object({
   name: z.string().min(2, "الاسم قصير جداً"),
@@ -25,7 +24,6 @@ type FormValues = z.infer<typeof schema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
 
   const {
     register,
@@ -35,10 +33,10 @@ export default function RegisterPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const res = await authApi.register(values);
-      setAuth(res.accessToken, res.user);
+      await authApi.register(values);
       toast.success("تم إنشاء حسابك بنجاح");
       router.replace("/");
+      router.refresh();
     } catch (err) {
       toast.error(getErrorMessage(err, "حدث خطأ، حاول مرة أخرى"));
     }

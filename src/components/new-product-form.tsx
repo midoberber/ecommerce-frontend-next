@@ -26,8 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/errors";
-import { productsClientApi } from "@/lib/products-client-api";
-import { categoriesApi } from "@/lib/shop-client-api";
+import { categoriesApi, productsApi } from "@/lib/shop-client-api";
 import type { Category } from "@/types/shop";
 
 const schema = z.object({
@@ -70,7 +69,7 @@ export function NewProductForm() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await productsClientApi.create({
+      await productsApi.create({
         name: values.name,
         description: values.description || undefined,
         priceCents: Math.round(values.price * 100),

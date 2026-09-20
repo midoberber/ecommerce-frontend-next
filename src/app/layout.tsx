@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { DirectionProvider } from "@/components/ui/direction";
 import { Toaster } from "@/components/ui/sonner";
+import { SessionProvider } from "@/components/session-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { getSession } from "@/lib/server-api";
 import "./globals.css";
 
 const plexArabic = IBM_Plex_Sans_Arabic({
@@ -20,15 +22,19 @@ export const metadata: Metadata = {
   description: "متجر إلكتروني تعليمي مبني بـ NestJS و Next.js",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await getSession();
+
   return (
     <html lang="ar" dir="rtl" className={`${plexArabic.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <DirectionProvider dir="rtl">
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
-          <Toaster position="top-center" />
+          <SessionProvider user={user}>
+            <SiteHeader />
+            <main className="flex-1">{children}</main>
+            <SiteFooter />
+            <Toaster position="top-center" />
+          </SessionProvider>
         </DirectionProvider>
       </body>
     </html>

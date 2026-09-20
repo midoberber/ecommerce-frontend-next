@@ -1,12 +1,10 @@
+export type UserRole = "customer" | "admin";
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
-}
-
-export interface AuthResponse {
-  accessToken: string;
-  user: AuthUser;
+  role: UserRole;
 }
 
 export interface RegisterPayload {

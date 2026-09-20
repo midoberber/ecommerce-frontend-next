@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, PackagePlus, Receipt, ShoppingCart, Store } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,9 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useSession } from "@/components/session-provider";
+import { authApi } from "@/lib/auth-api";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/store/auth-store";
 import { cartItemCount, useCartStore } from "@/store/cart-store";
 
 const navLinks = [
@@ -27,24 +28,25 @@ const navLinks = [
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const hasHydrated = useAuthStore((s) => s.hasHydrated);
-  const logout = useAuthStore((s) => s.logout);
+  const user = useSession();
   const cart = useCartStore((s) => s.cart);
   const refreshCart = useCartStore((s) => s.refresh);
   const clearCart = useCartStore((s) => s.clear);
   const count = cartItemCount(cart);
 
   useEffect(() => {
-    if (hasHydrated && user) {
+    if (user) {
       void refreshCart();
+    } else {
+      clearCart();
     }
-  }, [hasHydrated, user, refreshCart]);
+  }, [user, refreshCart, clearCart]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await authApi.logout();
     clearCart();
     router.replace("/");
+    router.refresh();
   };
 
   return (
@@ -75,9 +77,7 @@ export function SiteHeader() {
           </nav>
         </div>
 
-        {!hasHydrated ? (
-          <Skeleton className="size-8 rounded-full" />
-        ) : user ? (
+        {user ? (
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="relative" asChild>
               <Link href="/cart" aria-label="سلة التسوق">
@@ -103,8 +103,15 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="flex flex-col">
-                  <span>{user.name}</span>
+                <DropdownMenuLabel className="flex flex-col gap-1">
+                  <span className="flex items-center gap-2">
+                    {user.name}
+                    {user.role === "admin" && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        مدير
+                      </Badge>
+                    )}
+                  </span>
                   <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -114,12 +121,14 @@ export function SiteHeader() {
                     طلباتي
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/products/new">
-                    <PackagePlus />
-                    منتج جديد
-                  </Link>
-                </DropdownMenuItem>
+                {user.role === "admin" && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/products/new">
+                      <PackagePlus />
+                      منتج جديد
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem variant="destructive" onSelect={handleLogout}>
                   <LogOut />
                   تسجيل الخروج

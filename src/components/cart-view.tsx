@@ -8,25 +8,25 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImage } from "@/components/product-image";
 import { formatPrice } from "@/lib/format";
 import { getErrorMessage } from "@/lib/errors";
 import { cartApi, ordersApi } from "@/lib/shop-client-api";
 import { useCartStore } from "@/store/cart-store";
+import type { Cart } from "@/types/shop";
 
-export function CartView() {
+export function CartView({ initialCart }: { initialCart: Cart | null }) {
   const router = useRouter();
   const cart = useCartStore((s) => s.cart);
-  const isLoading = useCartStore((s) => s.isLoading);
   const setCart = useCartStore((s) => s.setCart);
-  const refresh = useCartStore((s) => s.refresh);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (initialCart) {
+      setCart(initialCart);
+    }
+  }, [initialCart, setCart]);
 
   const changeQuantity = async (itemId: string, quantity: number) => {
     setPendingId(itemId);
@@ -65,17 +65,9 @@ export function CartView() {
     }
   };
 
-  if (isLoading && !cart) {
-    return (
-      <div className="flex flex-col gap-3">
-        {Array.from({ length: 2 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 w-full" />
-        ))}
-      </div>
-    );
-  }
+  const current = cart ?? initialCart;
 
-  if (!cart || cart.items.length === 0) {
+  if (!current || current.items.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-20 text-center">
         <ShoppingBag className="size-10 text-muted-foreground" />
@@ -90,7 +82,7 @@ export function CartView() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="flex flex-col gap-3">
-        {cart.items.map((item) => {
+        {current.items.map((item) => {
           const busy = pendingId === item.id;
           return (
             <Card key={item.id}>
@@ -153,12 +145,12 @@ export function CartView() {
           <h2 className="font-semibold">ملخص الطلب</h2>
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>عدد القطع</span>
-            <span>{cart.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
+            <span>{current.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
           </div>
           <Separator />
           <div className="flex justify-between text-lg font-semibold">
             <span>الإجمالي</span>
-            <span>{formatPrice(cart.totalCents)}</span>
+            <span>{formatPrice(current.totalCents)}</span>
           </div>
           <Button size="lg" className="mt-2" onClick={checkout} disabled={isCheckingOut}>
             {isCheckingOut && <Loader2 className="animate-spin" />}

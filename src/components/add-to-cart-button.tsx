@@ -6,20 +6,20 @@ import { Loader2, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSession } from "@/components/session-provider";
 import { getErrorMessage } from "@/lib/errors";
 import { cartApi } from "@/lib/shop-client-api";
-import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
 
 export function AddToCartButton({ productId, stock }: { productId: string; stock: number }) {
   const router = useRouter();
-  const accessToken = useAuthStore((s) => s.accessToken);
+  const user = useSession();
   const setCart = useCartStore((s) => s.setCart);
   const [quantity, setQuantity] = useState(1);
   const [isPending, setIsPending] = useState(false);
 
   const handleAdd = async () => {
-    if (!accessToken) {
+    if (!user) {
       toast.info("سجّل الدخول أولاً لإضافة المنتجات للسلة");
       router.push("/login");
       return;

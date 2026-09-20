@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { CategoryFilter } from "@/components/category-filter";
 import { getCategories, getProducts } from "@/lib/products-api";
+import { getSession } from "@/lib/server-api";
 
 export const metadata: Metadata = { title: "المنتجات" };
 
@@ -14,7 +15,12 @@ export default async function ProductsPage({
   searchParams: Promise<{ categoryId?: string }>;
 }) {
   const { categoryId } = await searchParams;
-  const [products, categories] = await Promise.all([getProducts(categoryId), getCategories()]);
+  const [products, categories, user] = await Promise.all([
+    getProducts(categoryId),
+    getCategories(),
+    getSession(),
+  ]);
+  const isAdmin = user?.role === "admin";
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
@@ -23,12 +29,14 @@ export default async function ProductsPage({
           <h1 className="text-2xl font-semibold">المنتجات</h1>
           <p className="text-sm text-muted-foreground">{products.length} منتج</p>
         </div>
-        <Button asChild>
-          <Link href="/products/new">
-            <Plus data-icon="inline-start" />
-            منتج جديد
-          </Link>
-        </Button>
+        {isAdmin && (
+          <Button asChild>
+            <Link href="/products/new">
+              <Plus data-icon="inline-start" />
+              منتج جديد
+            </Link>
+          </Button>
+        )}
       </div>
 
       <CategoryFilter categories={categories} activeId={categoryId} />
@@ -37,10 +45,12 @@ export default async function ProductsPage({
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-20 text-center">
           <PackageOpen className="size-10 text-muted-foreground" />
           <p className="font-medium">لا توجد منتجات هنا</p>
-          <p className="text-sm text-muted-foreground">جرّب فئة أخرى أو أضف منتجاً جديداً.</p>
-          <Button asChild className="mt-2">
-            <Link href="/products/new">إضافة منتج</Link>
-          </Button>
+          <p className="text-sm text-muted-foreground">جرّب فئة أخرى.</p>
+          {isAdmin && (
+            <Button asChild className="mt-2">
+              <Link href="/products/new">إضافة منتج</Link>
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
