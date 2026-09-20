@@ -7,20 +7,32 @@ import { Loader2, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 import { ProductImage } from "@/components/product-image";
+import { AddressPicker } from "@/components/address-picker";
 import { formatPrice } from "@/lib/format";
 import { getErrorMessage } from "@/lib/errors";
 import { cartApi, ordersApi } from "@/lib/shop-client-api";
 import { useCartStore } from "@/store/cart-store";
+import type { Address } from "@/types/address";
 import type { Cart } from "@/types/shop";
 
-export function CartView({ initialCart }: { initialCart: Cart | null }) {
+export function CartView({
+  initialCart,
+  addresses,
+}: {
+  initialCart: Cart | null;
+  addresses: Address[];
+}) {
   const router = useRouter();
   const cart = useCartStore((s) => s.cart);
   const setCart = useCartStore((s) => s.setCart);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [addressId, setAddressId] = useState<string | null>(
+    addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? null,
+  );
 
   useEffect(() => {
     if (initialCart) {
@@ -52,15 +64,18 @@ export function CartView({ initialCart }: { initialCart: Cart | null }) {
   };
 
   const checkout = async () => {
+    if (!addressId) {
+      toast.error("اختر عنوان الشحن أولاً");
+      return;
+    }
+
     setIsCheckingOut(true);
     try {
-      const order = await ordersApi.checkout();
+      const order = await ordersApi.checkout(addressId);
       setCart({ items: [], totalCents: 0 });
-      toast.success("تم إنشاء طلبك بنجاح");
-      router.push(`/orders/${order.id}`);
+      router.push(`/orders/${order.id}/pay`);
     } catch (err) {
-      toast.error(getErrorMessage(err, "تعذّر إتمام الطلب"));
-    } finally {
+      toast.error(getErrorMessage(err, "تعذّر إنشاء الطلب"));
       setIsCheckingOut(false);
     }
   };
@@ -80,7 +95,7 @@ export function CartView({ initialCart }: { initialCart: Cart | null }) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div className="flex flex-col gap-3">
         {current.items.map((item) => {
           const busy = pendingId === item.id;
@@ -148,13 +163,29 @@ export function CartView({ initialCart }: { initialCart: Cart | null }) {
             <span>{current.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
           </div>
           <Separator />
+
+          <Field>
+            <FieldLabel>عنوان الشحن</FieldLabel>
+            <AddressPicker
+              addresses={addresses}
+              selectedId={addressId}
+              onSelect={setAddressId}
+            />
+          </Field>
+
+          <Separator />
           <div className="flex justify-between text-lg font-semibold">
             <span>الإجمالي</span>
             <span>{formatPrice(current.totalCents)}</span>
           </div>
-          <Button size="lg" className="mt-2" onClick={checkout} disabled={isCheckingOut}>
+          <Button
+            size="lg"
+            className="mt-2"
+            onClick={checkout}
+            disabled={isCheckingOut || !addressId}
+          >
             {isCheckingOut && <Loader2 className="animate-spin" />}
-            إتمام الطلب
+            متابعة للدفع
           </Button>
         </CardContent>
       </Card>

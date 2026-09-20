@@ -5,6 +5,18 @@ export interface AuthUser {
   email: string;
   name: string;
   role: UserRole;
+  avatarUrl: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+}
+
+export interface UpdateProfilePayload {
+  name?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  avatarUrl?: string;
 }
 
 export interface RegisterPayload {

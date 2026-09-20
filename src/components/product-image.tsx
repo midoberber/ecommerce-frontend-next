@@ -1,4 +1,5 @@
 import { ImageIcon } from "lucide-react";
+import { mediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 export function ProductImage({
@@ -10,6 +11,8 @@ export function ProductImage({
   alt: string;
   className?: string;
 }) {
+  const url = mediaUrl(src);
+
   return (
     <div
       className={cn(
@@ -17,9 +20,9 @@ export function ProductImage({
         className,
       )}
     >
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- الرابط ممكن يكون من أي دومين خارجي
-        <img src={src} alt={alt} className="size-full object-cover" />
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element -- الصور من سيرفر الـ API مش من دومين ثابت
+        <img src={url} alt={alt} className="size-full object-cover" />
       ) : (
         <ImageIcon className="size-10 text-muted-foreground/50" />
       )}

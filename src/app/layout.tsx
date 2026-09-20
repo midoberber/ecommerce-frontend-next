@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { DirectionProvider } from "@/components/ui/direction";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "@/components/session-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -22,20 +23,27 @@ export const metadata: Metadata = {
   description: "متجر إلكتروني تعليمي مبني بـ NestJS و Next.js",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
   const user = await getSession();
 
   return (
-    <html lang="ar" dir="rtl" className={`${plexArabic.variable} h-full antialiased`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      className={`${plexArabic.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-full flex-col">
-        <DirectionProvider dir="rtl">
-          <SessionProvider user={user}>
-            <SiteHeader />
-            <main className="flex-1">{children}</main>
-            <SiteFooter />
-            <Toaster position="top-center" />
-          </SessionProvider>
-        </DirectionProvider>
+        <ThemeProvider>
+          <DirectionProvider dir="rtl">
+            <SessionProvider user={user}>
+              <SiteHeader />
+              <main className="flex-1">{children}</main>
+              <SiteFooter />
+              <Toaster position="top-center" />
+            </SessionProvider>
+          </DirectionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

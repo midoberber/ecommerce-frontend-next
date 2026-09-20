@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/product-card";
 import { getProducts } from "@/lib/products-api";
 
 export default async function Home() {
-  const products = await getProducts();
+  const products = await getProducts({ sort: "newest" });
   const latest = products.slice(0, 4);
 
   return (

@@ -19,13 +19,17 @@ export interface Cart {
   totalCents: number;
 }
 
-export type OrderStatus = "pending" | "paid" | "cancelled";
+export type OrderStatus = "pending" | "paid" | "cancelled" | "failed";
 
 export interface Order {
   id: string;
   userId: string;
   totalCents: number;
   status: OrderStatus;
+  shippingAddress: string | null;
+  paymentReference: string | null;
+  cardLast4: string | null;
+  paidAt: string | null;
   createdAt: string;
 }
 
@@ -34,10 +38,18 @@ export interface OrderItem {
   orderId: string;
   productId: string | null;
   productName: string;
+  imageUrl: string | null;
   unitPriceCents: number;
   quantity: number;
 }
 
 export interface OrderDetail extends Order {
   items: OrderItem[];
+}
+
+export interface PayOrderPayload {
+  cardNumber: string;
+  cardHolder: string;
+  expiry: string;
+  cvc: string;
 }

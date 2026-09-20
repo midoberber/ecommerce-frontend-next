@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, PackagePlus, Receipt, ShoppingCart, Store } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { LogOut, PackagePlus, Receipt, ShoppingCart, Store, UserRound } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "@/components/session-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { authApi } from "@/lib/auth-api";
+import { mediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { cartItemCount, useCartStore } from "@/store/cart-store";
 
@@ -79,6 +81,7 @@ export function SiteHeader() {
 
         {user ? (
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <Button variant="ghost" size="icon" className="relative" asChild>
               <Link href="/cart" aria-label="سلة التسوق">
                 <ShoppingCart />
@@ -98,6 +101,9 @@ export function SiteHeader() {
                   aria-label="قائمة الحساب"
                 >
                   <Avatar>
+                    {user.avatarUrl && (
+                      <AvatarImage src={mediaUrl(user.avatarUrl)!} alt={user.name} />
+                    )}
                     <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -115,6 +121,12 @@ export function SiteHeader() {
                   <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/account">
+                    <UserRound />
+                    حسابي
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/orders">
                     <Receipt />
@@ -137,7 +149,8 @@ export function SiteHeader() {
             </DropdownMenu>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
             <Button variant="ghost" asChild>
               <Link href="/login">دخول</Link>
             </Button>

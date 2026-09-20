@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth-cookie";
 
-const protectedPaths = ["/cart", "/orders", "/products/new"];
+const protectedPaths = ["/cart", "/orders", "/products/new", "/account"];
 const guestOnlyPaths = ["/login", "/register"];
 
 export function proxy(request: NextRequest) {

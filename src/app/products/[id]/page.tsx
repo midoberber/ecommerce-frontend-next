@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ProductImage } from "@/components/product-image";
+import { ProductGallery } from "@/components/product-gallery";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { formatPrice } from "@/lib/format";
 import { getProduct } from "@/lib/products-api";
@@ -38,11 +38,7 @@ export default async function ProductDetailPage({ params }: Props) {
       </Button>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <ProductImage
-          src={product.imageUrl}
-          alt={product.name}
-          className="rounded-xl border"
-        />
+        <ProductGallery images={product.images} name={product.name} />
 
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-3">

@@ -5,16 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPrice } from "@/lib/format";
+import { orderStatusLabels, orderStatusVariants } from "@/lib/order-status";
 import { getServerOrders } from "@/lib/server-api";
-import type { OrderStatus } from "@/types/shop";
 
 export const metadata: Metadata = { title: "طلباتي" };
-
-const statusLabels: Record<OrderStatus, string> = {
-  pending: "قيد الانتظار",
-  paid: "مدفوع",
-  cancelled: "ملغي",
-};
 
 export default async function OrdersPage() {
   const orders = (await getServerOrders()) ?? [];
@@ -48,8 +42,8 @@ export default async function OrdersPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge variant={order.status === "paid" ? "secondary" : "outline"}>
-                      {statusLabels[order.status]}
+                    <Badge variant={orderStatusVariants[order.status]}>
+                      {orderStatusLabels[order.status]}
                     </Badge>
                     <span className="font-semibold">{formatPrice(order.totalCents)}</span>
                     <ChevronLeft className="size-4 text-muted-foreground" />

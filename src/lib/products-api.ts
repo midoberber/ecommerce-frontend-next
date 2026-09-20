@@ -1,13 +1,14 @@
-import type { Product } from "@/types/product";
+import type { Product, ProductFilters } from "@/types/product";
 import type { Category } from "@/types/shop";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function getProducts(categoryId?: string): Promise<Product[]> {
+export async function getProducts(filters: ProductFilters = {}): Promise<Product[]> {
   const url = new URL("/products", API_URL);
-  if (categoryId) {
-    url.searchParams.set("categoryId", categoryId);
-  }
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) url.searchParams.set(key, value);
+  });
 
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {

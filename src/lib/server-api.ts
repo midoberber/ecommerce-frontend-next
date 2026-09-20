@@ -1,5 +1,6 @@
 import "server-only";
 import { getSessionToken } from "./auth-cookie";
+import type { Address } from "@/types/address";
 import type { AuthUser } from "@/types/auth";
 import type { Cart, Order, OrderDetail } from "@/types/shop";
 
@@ -32,4 +33,8 @@ export function getServerOrders(): Promise<Order[] | null> {
 
 export function getServerOrder(id: string): Promise<OrderDetail | null> {
   return authedFetch(`/orders/${id}`);
+}
+
+export function getServerAddresses(): Promise<Address[] | null> {
+  return authedFetch("/addresses");
 }
