@@ -1,12 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -21,7 +32,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploader } from "@/components/image-uploader";
 import { getErrorMessage } from "@/lib/errors";
-import { categoriesApi, productsApi } from "@/lib/shop-client-api";
+import { adminApi, productsApi } from "@/lib/shop-client-api";
+import type { Product } from "@/types/product";
 import type { Category } from "@/types/shop";
 
 const schema = z.object({
@@ -37,10 +49,17 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function NewProductForm() {
+export function ProductForm({
+  categories,
+  product,
+}: {
+  categories: Category[];
+  product: Product | null;
+}) {
   const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [images, setImages] = useState<string[]>([]);
+  const isEdit = Boolean(product);
+  const [images, setImages] = useState<string[]>(product?.images ?? []);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     register,
@@ -49,31 +68,53 @@ export function NewProductForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", description: "", stock: 0, categoryId: "" },
+    defaultValues: {
+      name: product?.name ?? "",
+      description: product?.description ?? "",
+      price: product ? product.priceCents / 100 : undefined,
+      stock: product?.stock ?? 0,
+      categoryId: product?.categoryId ?? "",
+    },
   });
 
-  useEffect(() => {
-    categoriesApi
-      .list()
-      .then(setCategories)
-      .catch(() => setCategories([]));
-  }, []);
-
   const onSubmit = async (values: FormValues) => {
+    const payload = {
+      name: values.name,
+      description: values.description || undefined,
+      priceCents: Math.round(values.price * 100),
+      stock: values.stock,
+      categoryId: values.categoryId || undefined,
+      images,
+    };
+
     try {
-      await productsApi.create({
-        name: values.name,
-        description: values.description || undefined,
-        priceCents: Math.round(values.price * 100),
-        stock: values.stock,
-        categoryId: values.categoryId || undefined,
-        images,
-      });
-      toast.success("تمت إضافة المنتج");
-      router.push("/products");
+      if (product) {
+        await adminApi.updateProduct(product.id, payload);
+        toast.success("تم تحديث المنتج");
+        router.push(`/products/${product.id}`);
+      } else {
+        await productsApi.create(payload);
+        toast.success("تمت إضافة المنتج");
+        router.push("/products");
+      }
       router.refresh();
     } catch (err) {
       toast.error(getErrorMessage(err, "تعذّر حفظ المنتج"));
+    }
+  };
+
+  const remove = async () => {
+    if (!product) return;
+
+    setIsDeleting(true);
+    try {
+      await adminApi.deleteProduct(product.id);
+      toast.success("تم حذف المنتج");
+      router.push("/products");
+      router.refresh();
+    } catch (err) {
+      toast.error(getErrorMessage(err, "تعذّر حذف المنتج"));
+      setIsDeleting(false);
     }
   };
 
@@ -81,8 +122,10 @@ export function NewProductForm() {
     <div className="mx-auto w-full max-w-xl px-4 py-8">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">منتج جديد</CardTitle>
-          <CardDescription>أضف منتجاً جديداً إلى المتجر</CardDescription>
+          <CardTitle className="text-xl">{isEdit ? "تعديل المنتج" : "منتج جديد"}</CardTitle>
+          <CardDescription>
+            {isEdit ? "حدّث بيانات المنتج" : "أضف منتجاً جديداً إلى المتجر"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -156,14 +199,42 @@ export function NewProductForm() {
                 </Field>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  حفظ المنتج
+                  {isEdit ? "حفظ التعديلات" : "حفظ المنتج"}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   إلغاء
                 </Button>
+
+                {isEdit && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="ms-auto text-destructive"
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                        حذف المنتج
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>حذف المنتج</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          سيتم حذف &quot;{product?.name}&quot; وكل صوره وتقييماته نهائياً.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogAction onClick={remove}>حذف</AlertDialogAction>
+                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
             </FieldGroup>
           </form>

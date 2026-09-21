@@ -3,10 +3,15 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { getProducts } from "@/lib/products-api";
+import { getServerWishlistIds } from "@/lib/server-api";
 
 export default async function Home() {
-  const products = await getProducts({ sort: "newest" });
+  const [products, wishlistIds] = await Promise.all([
+    getProducts({ sort: "newest" }),
+    getServerWishlistIds(),
+  ]);
   const latest = products.slice(0, 4);
+  const wishlist = new Set(wishlistIds ?? []);
 
   return (
     <div>
@@ -39,7 +44,11 @@ export default async function Home() {
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {latest.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                inWishlist={wishlist.has(product.id)}
+              />
             ))}
           </div>
         )}

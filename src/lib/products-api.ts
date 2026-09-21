@@ -1,5 +1,6 @@
 import type { Product, ProductFilters } from "@/types/product";
 import type { Category } from "@/types/shop";
+import type { Review } from "@/types/review";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -33,5 +34,11 @@ export async function getCategories(): Promise<Category[]> {
   if (!res.ok) {
     throw new Error("Failed to load categories");
   }
+  return res.json();
+}
+
+export async function getProductReviews(productId: string): Promise<Review[]> {
+  const res = await fetch(`${API_URL}/products/${productId}/reviews`, { cache: "no-store" });
+  if (!res.ok) return [];
   return res.json();
 }

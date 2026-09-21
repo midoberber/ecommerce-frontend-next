@@ -19,7 +19,13 @@ export interface Cart {
   totalCents: number;
 }
 
-export type OrderStatus = "pending" | "paid" | "cancelled" | "failed";
+export type OrderStatus =
+  | "pending"
+  | "paid"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "failed";
 
 export interface Order {
   id: string;

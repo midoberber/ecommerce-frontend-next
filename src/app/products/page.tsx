@@ -7,7 +7,7 @@ import { ProductListItem } from "@/components/product-list-item";
 import { ProductFilters } from "@/components/product-filters";
 import { ViewToggle } from "@/components/view-toggle";
 import { getCategories, getProducts } from "@/lib/products-api";
-import { getSession } from "@/lib/server-api";
+import { getServerWishlistIds, getSession } from "@/lib/server-api";
 import type { ProductFilters as Filters, ProductView } from "@/types/product";
 
 export const metadata: Metadata = { title: "المنتجات" };
@@ -20,12 +20,14 @@ export default async function ProductsPage({
   const { view, ...filters } = await searchParams;
   const activeView: ProductView = view === "list" ? "list" : "grid";
 
-  const [products, categories, user] = await Promise.all([
+  const [products, categories, user, wishlistIds] = await Promise.all([
     getProducts(filters),
     getCategories(),
     getSession(),
+    getServerWishlistIds(),
   ]);
   const isAdmin = user?.role === "admin";
+  const wishlist = new Set(wishlistIds ?? []);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
@@ -58,13 +60,21 @@ export default async function ProductsPage({
       ) : activeView === "list" ? (
         <div className="flex flex-col gap-3">
           {products.map((product) => (
-            <ProductListItem key={product.id} product={product} />
+            <ProductListItem
+              key={product.id}
+              product={product}
+              inWishlist={wishlist.has(product.id)}
+            />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              inWishlist={wishlist.has(product.id)}
+            />
           ))}
         </div>
       )}

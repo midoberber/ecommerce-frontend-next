@@ -2,10 +2,18 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProductImage } from "@/components/product-image";
+import { StarRating } from "@/components/star-rating";
+import { WishlistButton } from "@/components/wishlist-button";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/product";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  inWishlist = false,
+}: {
+  product: Product;
+  inWishlist?: boolean;
+}) {
   const outOfStock = product.stock === 0;
 
   return (
@@ -17,6 +25,9 @@ export function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             className="transition-transform duration-300 group-hover:scale-105"
           />
+          <div className="absolute top-2 end-2">
+            <WishlistButton productId={product.id} initialInWishlist={inWishlist} />
+          </div>
           {product.images.length > 1 && (
             <span className="absolute bottom-2 end-2 rounded-full bg-background/90 px-2 py-0.5 text-[11px] font-medium">
               {product.images.length} صور
@@ -28,6 +39,7 @@ export function ProductCard({ product }: { product: Product }) {
             <h3 className="line-clamp-1 font-medium">{product.name}</h3>
             {outOfStock && <Badge variant="destructive">نفد</Badge>}
           </div>
+          <StarRating value={product.ratingAverage} count={product.ratingCount} />
           <p className="line-clamp-2 min-h-10 text-sm text-muted-foreground">
             {product.description || "بدون وصف"}
           </p>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, PackagePlus, Receipt, ShoppingCart, Store, UserRound } from "lucide-react";
+import { Heart, LayoutDashboard, LogOut, Receipt, ShoppingCart, Store, UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,11 @@ export function SiteHeader() {
         {user ? (
           <div className="flex items-center gap-1">
             <ThemeToggle />
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/wishlist" aria-label="المفضلة">
+                <Heart />
+              </Link>
+            </Button>
             <Button variant="ghost" size="icon" className="relative" asChild>
               <Link href="/cart" aria-label="سلة التسوق">
                 <ShoppingCart />
@@ -135,9 +140,9 @@ export function SiteHeader() {
                 </DropdownMenuItem>
                 {user.role === "admin" && (
                   <DropdownMenuItem asChild>
-                    <Link href="/products/new">
-                      <PackagePlus />
-                      منتج جديد
+                    <Link href="/admin">
+                      <LayoutDashboard />
+                      لوحة التحكم
                     </Link>
                   </DropdownMenuItem>
                 )}

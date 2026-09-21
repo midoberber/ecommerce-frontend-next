@@ -6,6 +6,8 @@ export interface Product {
   priceCents: number;
   stock: number;
   images: string[];
+  ratingAverage: number;
+  ratingCount: number;
   createdAt: string;
   updatedAt: string;
 }

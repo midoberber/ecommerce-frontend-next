@@ -4,6 +4,8 @@ import type { Address, AddressPayload } from "@/types/address";
 import type { AuthUser, UpdateProfilePayload } from "@/types/auth";
 import type { CreateProductPayload, Product } from "@/types/product";
 import type { Cart, Category, Order, OrderDetail, PayOrderPayload } from "@/types/shop";
+import type { CreateReviewPayload, MyReviewState, Review } from "@/types/review";
+import type { AdminOrderStatus } from "@/types/admin";
 
 export const productsApi = {
   create: (payload: CreateProductPayload) =>
@@ -67,3 +69,37 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   const res = await axios.post<{ urls: string[] }>("/api/upload", formData);
   return res.data.urls;
 }
+
+export const wishlistApi = {
+  add: (productId: string) =>
+    apiClient.post<{ productId: string; inWishlist: boolean }>(`/wishlist/${productId}`),
+
+  remove: (productId: string) =>
+    apiClient.delete<{ productId: string; inWishlist: boolean }>(`/wishlist/${productId}`),
+};
+
+export const reviewsApi = {
+  listByProduct: (productId: string) =>
+    apiClient.get<Review[]>(`/products/${productId}/reviews`).then((res) => res.data),
+
+  mine: (productId: string) =>
+    apiClient.get<MyReviewState>(`/products/${productId}/reviews/me`).then((res) => res.data),
+
+  submit: (productId: string, payload: CreateReviewPayload) =>
+    apiClient.post(`/products/${productId}/reviews`, payload).then((res) => res.data),
+
+  remove: (reviewId: string) => apiClient.delete(`/reviews/${reviewId}`),
+};
+
+export const adminApi = {
+  updateOrderStatus: (orderId: string, status: AdminOrderStatus) =>
+    apiClient.patch(`/admin/orders/${orderId}/status`, { status }).then((res) => res.data),
+
+  deleteProduct: (productId: string) => apiClient.delete(`/products/${productId}`),
+
+  updateProduct: (productId: string, payload: Partial<CreateProductPayload>) =>
+    apiClient.patch<Product>(`/products/${productId}`, payload).then((res) => res.data),
+
+  setUserBlocked: (userId: string, isBlocked: boolean) =>
+    apiClient.patch(`/admin/users/${userId}/block`, { isBlocked }).then((res) => res.data),
+};
